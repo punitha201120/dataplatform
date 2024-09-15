@@ -9,7 +9,7 @@ resource "aws_db_instance" "postgress" {
   identifier              = "mypgdb"           # Unique identifier for PostgreSQL instance
   username                = var.user         # PostgreSQL username
   password                = var.password      # PostgreSQL password
-  vpc_security_group_ids  = var.vpc_security_group_ids
+  vpc_security_group_ids  = ["sg-05a3f941d919e01ee"]
   db_subnet_group_name    = aws_db_subnet_group.default.name 
   skip_final_snapshot     = true               # Skip final snapshot when deleting
 
