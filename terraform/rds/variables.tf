@@ -33,7 +33,3 @@ variable password {
   type        = string
   sensitive   = true    # This ensures that the password is handled securely
 }
-variable vpc_security_group_ids{
-  type = any
-  default ="sg-05a3f941d919e01ee"
-}
