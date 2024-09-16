@@ -1,35 +1,42 @@
-#!/bin/bash
+@echo off
+setlocal enabledelayedexpansion
+
+rem Initialize Terraform with backend config
 terraform init -backend-config=backend-config-acco-dev.hcl
-chmod +x ./generate-tfvars.sh
 
-# Fetch VPC ID based on VPC tag name
-vpc_id=$(aws ec2 describe-vpcs | jq -r '.Vpcs[] | select(.Tags[].Value == "default_network-dev-000") | .VpcId')
+rem Grant execute permission to generate-tfvars.sh (skip on Windows since it's not needed)
+rem chmod +x ./generate-tfvars.sh
 
-# Fetch Subnet IDs for the given VPC ID
-subnet_ids=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" | jq -r '.Subnets[].SubnetId' | jq -R -s 'split("\n") | map(select(length > 0))')
+rem Use PowerShell to fetch VPC ID, Subnet IDs, and CIDR Block
+for /f "tokens=*" %%i in ('powershell -command "(aws ec2 describe-vpcs | ConvertFrom-Json).Vpcs | Where-Object { $_.Tags.Value -eq 'default_network-dev-000' } | Select-Object -ExpandProperty VpcId"') do (
+    set vpc_id=%%i
+)
 
-# Fetch CIDR block for the given VPC ID
-cidr_blocks=$(aws ec2 describe-vpcs --vpc-ids $vpc_id --query "Vpcs[0].CidrBlock" --output text)
+rem Fetch Subnet IDs for the given VPC ID
+for /f "tokens=*" %%i in ('powershell -command "(aws ec2 describe-subnets --filters Name=vpc-id,Values=!vpc_id! | ConvertFrom-Json).Subnets | Select-Object -ExpandProperty SubnetId"') do (
+    set subnet_ids=!subnet_ids! %%i
+)
 
-# Create the dynamic.tfvars file and populate it with the VPC ID, subnet IDs, and CIDR blocks
-echo "vpc_id = \"$vpc_id\"" >> dynamic.tfvars
-subnet_ids=$(echo $subnet_ids | jq -c '.')
-echo "subnet_ids = $subnet_ids" >> dynamic.tfvars
-echo "cidr_blocks = [\"$cidr_blocks\"]" >> dynamic.tfvars
+rem Fetch CIDR Block for the given VPC ID
+for /f "tokens=*" %%i in ('powershell -command "(aws ec2 describe-vpcs --vpc-ids !vpc_id! --query 'Vpcs[0].CidrBlock' --output text)"') do (
+    set cidr_block=%%i
+)
 
-# Output the contents of the dynamic.tfvars file
-echo "dynamic.tfvars file created with the following content:"
-cat dynamic.tfvars
+rem Create dynamic.tfvars file
+echo vpc_id = "!vpc_id!" > dynamic.tfvars
+echo subnet_ids = ["!subnet_ids!"] >> dynamic.tfvars
+echo cidr_blocks = ["!cidr_block!"] >> dynamic.tfvars
 
-# Plan the Terraform configuration with the dynamic.tfvars file
-terraform plan -var-file variables.acco.dev.tfvars -var-file dynamic.tfvars
-# Apply the Terraform configuration with the dynamic.tfvars file
-terraform apply -var-file variables.acco.dev.tfvars -var-file dynamic.tfvars -auto-approve
-# After applying the Terraform configuration, delete the dynamic.tfvars file
-rm -f dynamic.tfvars
-echo "dynamic.tfvars file has been deleted."
+rem Output contents of dynamic.tfvars
+echo dynamic.tfvars file created with the following content:
+type dynamic.tfvars
 
+rem Run Terraform plan and apply using the generated dynamic.tfvars
+terraform plan -var-file=variables.acco.dev.tfvars -var-file=dynamic.tfvars
+terraform apply -var-file=variables.acco.dev.tfvars -var-file=dynamic.tfvars -auto-approve
 
+rem Delete dynamic.tfvars after applying Terraform
+del dynamic.tfvars
+echo dynamic.tfvars file has been deleted.
 
-
-
+endlocal
