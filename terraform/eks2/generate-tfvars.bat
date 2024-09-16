@@ -2,7 +2,13 @@
 setlocal enabledelayedexpansion
 
 rem Initialize Terraform with backend config
-terraform init -backend-config=terraform/eks2/backend-config-acco-dev.hcl
+if [ -f terraform/eks2/backend-config-acco-dev.hcl ]; then
+    terraform init -backend-config=terraform/eks2/backend-config-acco-dev.hcl
+else
+    echo "Backend config file not found!"
+    exit 1
+fi
+
 
 rem Grant execute permission to generate-tfvars.sh (skip on Windows since it's not needed)
 rem chmod +x ./generate-tfvars.sh
