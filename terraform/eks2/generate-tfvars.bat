@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 rem Initialize Terraform with backend config
-terraform init -backend-config=terraform/eks2/backend-config-acco-dev.hcl
+terraform init -backend-config=terraform/eks2/backend-config-acco-dev.hcl -var-file=variables.acco.dev.tfvars
 
 
 
