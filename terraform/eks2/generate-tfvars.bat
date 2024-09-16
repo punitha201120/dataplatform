@@ -32,8 +32,8 @@ echo dynamic.tfvars file created with the following content:
 type dynamic.tfvars
 
 rem Run Terraform plan and apply using the generated dynamic.tfvars
-terraform plan -var-file=variables.acco.dev.tfvars -var-file=dynamic.tfvars
-terraform apply -var-file=variables.acco.dev.tfvars -var-file=dynamic.tfvars -auto-approve
+terraform plan -var-file=terraform/eks2/variables.acco.dev.tfvars -var-file=dynamic.tfvars
+terraform apply -var-file=terraform/eks2/variables.acco.dev.tfvars -var-file=dynamic.tfvars -auto-approve
 
 rem Delete dynamic.tfvars after applying Terraform
 del dynamic.tfvars
