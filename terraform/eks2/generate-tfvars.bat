@@ -11,7 +11,7 @@ set subnet_ids=
 
 rem Fetch Subnet IDs for the given VPC ID and format them as a JSON array
 for /f "tokens=*" %%i in ('powershell -command "(aws ec2 describe-subnets --filters Name=vpc-id,Values=!vpc_id! | ConvertFrom-Json).Subnets | Select-Object -ExpandProperty SubnetId"') do (
-    set "subnet_ids=!subnet_ids!,\"%%i\""
+    set "subnet_ids=!subnet_ids!,"%%i""
 )
 
 rem Remove leading comma from the subnet_ids variable
